@@ -123,6 +123,7 @@ module ActiveMerchant #:nodoc:
                 end
               end
               add_payment_method(xml, money, payment_method, options)
+              add_three_d_shopper(xml, options) if options[:three_d]
             end
           end
         end
@@ -177,7 +178,37 @@ module ActiveMerchant #:nodoc:
 
               add_address(xml, 'cardAddress', (options[:billing_address] || options[:address]))
             end
+
+            if options[:three_d]
+              add_three_d_session(xml, options)
+              add_three_d_secure(xml, options) if options[:three_d][:pa_response]
+            end
           end
+        end
+      end
+
+      def add_three_d_session(xml, options)
+        xml.tag! "session",
+          "shopperIPAddress" => options[:three_d][:ip_address],
+          "id" => options[:three_d][:session_id]
+      end
+
+      def add_three_d_shopper(xml, options)
+        xml.tag! "shopper" do
+          xml.tag! "browser" do
+            xml.tag! "acceptHeader", "text/html"
+            xml.tag! "userAgentHeader", options[:three_d][:user_agent]
+          end
+        end
+
+        if options[:three_d][:echo_data]
+          xml.tag! "echoData", options[:three_d][:echo_data]
+        end
+      end
+
+      def add_three_d_secure(xml, options)
+        xml.tag! "info3DSecure" do
+          xml.tag! "paResponse", options[:three_d][:pa_response]
         end
       end
 

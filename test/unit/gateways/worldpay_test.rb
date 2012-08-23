@@ -11,9 +11,9 @@ class WorldpayTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
-    @options = {:order_id => 1} 
+    @options = { :order_id => 1} 
   end
-  
+
   def test_successful_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -133,6 +133,28 @@ class WorldpayTest < Test::Unit::TestCase
       assert_tag_with_attributes 'amount',
           {'value' => '100', 'exponent' => '2', 'currencyCode' => 'GBP'},
         data
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_three_d_options
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(:three_d => {
+        :ip_address  => "123.123.123.123",
+        :session_id  => "12345",
+        :user_agent  => "Firefox or something",
+        :pa_response => "Something random",
+        :echo_data   => "Echo"
+      }))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<session shopperIPAddress="123.123.123.123" id="12345"/>), data
+      assert_match %r(<browser>), data
+      assert_match %r(<acceptHeader>text/html</acceptHeader>), data
+      assert_match %r(<userAgentHeader>Firefox or something</userAgentHeader>), data
+      assert_match %r(</browser>), data
+      assert_match %r(<info3DSecure>), data
+      assert_match %r(<paResponse>Something random</paResponse>), data
+      assert_match %r(</info3DSecure>), data
+      assert_match %r(<echoData>Echo</echoData>), data
     end.respond_with(successful_authorize_response)
   end
 
