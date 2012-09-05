@@ -143,7 +143,8 @@ class WorldpayTest < Test::Unit::TestCase
         :session_id  => "12345",
         :user_agent  => "Firefox or something",
         :pa_response => "Something random",
-        :echo_data   => "Echo"
+        :echo_data   => "Echo",
+        :cookie      => "Yum cookiez"
       }))
     end.check_request do |endpoint, data, headers|
       assert_match %r(<session shopperIPAddress="123.123.123.123" id="12345"/>), data
@@ -155,6 +156,7 @@ class WorldpayTest < Test::Unit::TestCase
       assert_match %r(<paResponse>Something random</paResponse>), data
       assert_match %r(</info3DSecure>), data
       assert_match %r(<echoData>Echo</echoData>), data
+      assert_equal "Yum cookiez", headers["Cookie"]
     end.respond_with(successful_authorize_response)
   end
 
@@ -230,6 +232,8 @@ class WorldpayTest < Test::Unit::TestCase
         "reply"=>true,
         "risk_score_value"=>"1",
       }, response.params)
+
+      assert_equal({ "foo" => "bar" }, response.headers)
   end
 
   def test_auth

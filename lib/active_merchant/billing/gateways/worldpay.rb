@@ -64,23 +64,23 @@ module ActiveMerchant #:nodoc:
       private
 
       def authorize_request(money, payment_method, options)
-        commit('authorize', build_authorization_request(money, payment_method, options), "AUTHORISED")
+        commit('authorize', build_authorization_request(money, payment_method, options), "AUTHORISED", options)
       end
 
       def capture_request(money, authorization, options)
-        commit('capture', build_capture_request(money, authorization, options), :ok)
+        commit('capture', build_capture_request(money, authorization, options), :ok, options)
       end
 
       def cancel_request(authorization, options)
-        commit('cancel', build_void_request(authorization, options), :ok)
+        commit('cancel', build_void_request(authorization, options), :ok, options)
       end
 
       def inquire_request(authorization, options, success_criteria)
-        commit('inquiry', build_order_inquiry_request(authorization, options), success_criteria)
+        commit('inquiry', build_order_inquiry_request(authorization, options), success_criteria, options)
       end
 
       def refund_request(money, authorization, options)
-        commit('inquiry', build_refund_request(money, authorization, options), :ok)
+        commit('inquiry', build_refund_request(money, authorization, options), :ok, options)
       end
 
       def build_request
@@ -255,11 +255,17 @@ module ActiveMerchant #:nodoc:
         raw
       end
 
-      def commit(action, request, success_criteria)
-        xmr = ssl_post((test? ? self.test_url : self.live_url),
-          request,
-          'Content-Type' => 'text/xml',
-          'Authorization' => encoded_credentials)
+      def commit(action, request, success_criteria, options = {})
+        headers = {
+          'Content-Type'  => 'text/xml',
+          'Authorization' => encoded_credentials
+        }
+
+        if options[:three_d] && options[:three_d][:cookie]
+          headers['Cookie'] = options[:three_d][:cookie]
+        end
+
+        xmr = ssl_post((test? ? self.test_url : self.live_url), request, headers)
 
         raw = parse(action, xmr)
 
@@ -268,7 +274,8 @@ module ActiveMerchant #:nodoc:
           message_from(raw),
           raw,
           :authorization => authorization_from(raw),
-          :test => test?)
+          :test => test?,
+          :headers => xmr.headers)
       rescue ActiveMerchant::ResponseError => e
         if e.response.code.to_s == "401"
           return Response.new(false, "Invalid credentials", {}, :test => test?)
@@ -299,4 +306,31 @@ module ActiveMerchant #:nodoc:
       end
     end
   end
+
+  # 3D Monkey Patches
+  class WorldPayResponse < String
+    def initialize(resp)
+      @resp = resp
+      super(resp.body)
+    end
+
+    def headers
+      _headers = {}
+      @resp.each_header { |k,v| _headers[k] = v }
+      _headers
+    end
+  end
+
+  module PostsData
+    private
+    def handle_response(response)
+      case response.code.to_i
+      when 200...300
+        WorldPayResponse.new(response)
+      else
+        raise ResponseError.new(response)
+      end
+    end
+  end
 end
+

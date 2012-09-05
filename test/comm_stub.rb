@@ -12,11 +12,23 @@ module CommStub
     end
 
     def respond_with(*responses)
+      # HACK: so we can test custom world pay response (w/headers)
+      if defined? ActiveMerchant::WorldPayResponse
+        responses.each do |response|
+          def response.body; self end
+          def response.each_header(&block); { "foo" => "bar" }.each(&block); end
+        end
+
+        responses = responses.map do |response|
+          ActiveMerchant::WorldPayResponse.new(response)
+        end
+      end
+
       @complete = true
       check = @check
       (class << @gateway; self; end).send(:define_method, :ssl_post) do |*args|
         check.call(*args) if check
-        (responses.size == 1 ? responses.last : responses.shift)
+        responses.size == 1 ? responses.last : responses.shift
       end
       @action.call
     end

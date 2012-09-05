@@ -19,11 +19,16 @@ module ActiveMerchant #:nodoc:
         @fraud_review
       end
 
+      def headers
+        @headers
+      end
+
       def initialize(success, message, params = {}, options = {})
         @success, @message, @params = success, message, params.stringify_keys
         @test = options[:test] || false
         @authorization = options[:authorization]
         @fraud_review = options[:fraud_review]
+        @headers = options[:headers]
         @avs_result = AVSResult.new(options[:avs_result]).to_hash
         @cvv_result = CVVResult.new(options[:cvv_result]).to_hash
       end
@@ -52,7 +57,7 @@ module ActiveMerchant #:nodoc:
         @responses.all?{|r| r.success?}
       end
 
-      %w(params message test authorization avs_result cvv_result test? fraud_review?).each do |m|
+      %w(headers params message test authorization avs_result cvv_result test? fraud_review?).each do |m|
         class_eval %(
           def #{m}
             @responses.last.#{m}
