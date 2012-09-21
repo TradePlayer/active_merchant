@@ -221,9 +221,9 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'lastName',        address[:last_name]        if address[:last_name]
             xml.tag! 'address1',        address[:address_1]        if address[:address_1]
             xml.tag! 'address2',        address[:address_2]        if address[:address_2]
+            xml.tag! 'postalCode',      address[:postal_code]      if address[:postal_code]
             xml.tag! 'city',            address[:city]             if address[:city]
             xml.tag! 'state',           address[:state]            if address[:state]
-            xml.tag! 'postalCode',      address[:postal_code]      if address[:postal_code]
             xml.tag! 'countryCode',     address[:country_code]     if address[:country_code]
             xml.tag! 'telephoneNumber', address[:telephone_number] if address[:telephone_number]
           end
