@@ -161,47 +161,30 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def test_address_handling
-    stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(:billing_address => address))
-    end.check_request do |endpoint, data, headers|
-      assert_match %r(<firstName>Jim</firstName>), data
-      assert_match %r(<lastName>Smith</lastName>), data
-      assert_match %r(<street>My Street</street>), data
-      assert_match %r(<houseNumber>1234</houseNumber>), data
-      assert_match %r(<houseName>Apt 1</houseName>), data
-      assert_match %r(<postalCode>K1C2N6</postalCode>), data
-      assert_match %r(<city>Ottawa</city>), data
-      assert_match %r(<state>ON</state>), data
-      assert_match %r(<countryCode>CA</countryCode>), data
-      assert_match %r(<telephoneNumber>\(555\)555-5555</telephoneNumber>), data
-    end.respond_with(successful_authorize_response)
+    the_address = {
+      :first_name       => "First Name",
+      :last_name        => "Last Name",
+      :address_1        => "Address Line 1",
+      :address_2        => "Address Line 2",
+      :city             => "City",
+      :state            => "State",
+      :postal_code      => "Post Code",
+      :country_code     => "GB",
+      :telephone_number => "12345678910"
+    }
 
     stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(:address => address))
+      @gateway.authorize(100, @credit_card, @options.merge(:billing_address => the_address))
     end.check_request do |endpoint, data, headers|
-      assert_match %r(<firstName>Jim</firstName>), data
-      assert_match %r(<lastName>Smith</lastName>), data
-      assert_match %r(<street>My Street</street>), data
-      assert_match %r(<houseNumber>1234</houseNumber>), data
-      assert_match %r(<houseName>Apt 1</houseName>), data
-      assert_match %r(<postalCode>K1C2N6</postalCode>), data
-      assert_match %r(<city>Ottawa</city>), data
-      assert_match %r(<state>ON</state>), data
-      assert_match %r(<countryCode>CA</countryCode>), data
-      assert_match %r(<telephoneNumber>\(555\)555-5555</telephoneNumber>), data
-    end.respond_with(successful_authorize_response)
-
-    stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(:address => {:address1 => "Anystreet", :country => "US"}))
-    end.check_request do |endpoint, data, headers|
-      assert_no_match %r(firstName), data
-      assert_no_match %r(lastName), data
-      assert_no_match %r(houseName), data
-      assert_no_match %r(city), data
-      assert_no_match %r(telephoneNumber), data
-      assert_match %r(<street>Anystreet</street>), data
-      assert_match %r(<postalCode>0000</postalCode>), data
-      assert_match %r(<state>N/A</state>), data
+      assert_match %r(<firstName>First Name</firstName>), data
+      assert_match %r(<lastName>Last Name</lastName>), data
+      assert_match %r(<address1>Address Line 1</address1>), data
+      assert_match %r(<address2>Address Line 2</address2>), data
+      assert_match %r(<city>City</city>), data
+      assert_match %r(<state>State</state>), data
+      assert_match %r(<postalCode>Post Code</postalCode>), data
+      assert_match %r(<countryCode>GB</countryCode>), data
+      assert_match %r(<telephoneNumber>12345678910</telephoneNumber>), data
     end.respond_with(successful_authorize_response)
   end
 

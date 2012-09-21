@@ -217,23 +217,15 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! element do
           xml.tag! 'address' do
-            if m = /^\s*([^\s]+)\s+(.+)$/.match(address[:name])
-              xml.tag! 'firstName', m[1]
-              xml.tag! 'lastName', m[2]
-            end
-            if m = /^\s*(\d+)\s+(.+)$/.match(address[:address1])
-              xml.tag! 'street', m[2]
-              house_number = m[1]
-            else
-              xml.tag! 'street', address[:address1]
-            end
-            xml.tag! 'houseName', address[:address2] if address[:address2]
-            xml.tag! 'houseNumber', house_number if house_number.present?
-            xml.tag! 'postalCode', (address[:zip].present? ? address[:zip] : "0000")
-            xml.tag! 'city', address[:city] if address[:city]
-            xml.tag! 'state', (address[:state].present? ? address[:state] : 'N/A')
-            xml.tag! 'countryCode', address[:country]
-            xml.tag! 'telephoneNumber', address[:phone] if address[:phone]
+            xml.tag! 'firstName',       address[:first_name]       if address[:first_name]
+            xml.tag! 'lastName',        address[:last_name]        if address[:last_name]
+            xml.tag! 'address1',        address[:address_1]        if address[:address_1]
+            xml.tag! 'address2',        address[:address_2]        if address[:address_2]
+            xml.tag! 'city',            address[:city]             if address[:city]
+            xml.tag! 'state',           address[:state]            if address[:state]
+            xml.tag! 'postalCode',      address[:postal_code]      if address[:postal_code]
+            xml.tag! 'countryCode',     address[:country_code]     if address[:country_code]
+            xml.tag! 'telephoneNumber', address[:telephone_number] if address[:telephone_number]
           end
         end
       end
