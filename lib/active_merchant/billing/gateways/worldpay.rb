@@ -7,15 +7,20 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'GBP'
       self.money_format = :cents
       self.supported_countries = ['HK', 'US', 'GB', 'AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :laser]
       self.homepage_url = 'http://www.worldpay.com/'
       self.display_name = 'WorldPay'
 
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :solo, :maestro, :diners_club, :laser]
       CARD_CODES = {
         'visa'             => 'VISA-SSL',
         'master'           => 'ECMC-SSL',
-        'discover'         => 'DISCOVER-SSL',
         'american_express' => 'AMEX-SSL',
+        'discover'         => 'DISCOVER-SSL',
+        'jcb'              => 'JCB-SSL',
+        'solo'             => 'SOLO_GB-SSL',
+        'maestro'          => 'MAESTRO-SSL',
+        'diners_club'      => 'DINERS-SSL',
+        'laser'            => 'LASER-SSL'
       }
 
       def initialize(options = {})
