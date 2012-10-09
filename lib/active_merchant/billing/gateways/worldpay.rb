@@ -62,6 +62,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def payout_to_visa(money, payment_method, options = {})
+        MultiResponse.new.tap do |r|
+          # WorldPay is weird... to pay out to a card (visa only on corporate gateway)
+          # you must make an authorize request setting the action on the paymentDetails tag to "REFUND"
+          #
+          # But it's not really a refund so the usual refund method won't work :P
+          r.process{authorize(money, payment_method, options.merge(:action => "REFUND"))}
+          r.process{capture(money, r.authorization, options.merge(:authorization_validated => true))}
+        end
+      end
+
       def test?
         @options[:test] || super  
       end
@@ -171,7 +182,7 @@ module ActiveMerchant #:nodoc:
             add_amount(xml, amount, options)
           end
         else
-          xml.tag! 'paymentDetails' do
+          xml.tag! 'paymentDetails', { 'action' => options[:action] }.reject { |_,v| !v } do
             xml.tag! CARD_CODES[card_brand(payment_method)] do
               xml.tag! 'cardNumber', payment_method.number
               xml.tag! 'expiryDate' do
